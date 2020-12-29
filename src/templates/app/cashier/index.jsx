@@ -80,7 +80,7 @@ const Cashier = () => (
         </div>
 
         <div className='gr-padding-10 table-body client_virtual invisible gr-parent'>
-            <h3 className='gr-padding-10'>{it.L('Top up virtual account')}</h3>
+            <h3 className='gr-padding-10'>{it.L('Reset your virtual balance')}</h3>
             <div className='gr-row'>
                 <IconWithLink img_id='virtual_money_icon' img_src={it.url_for('images/pages/cashier/virtual_topup.svg')} />
                 <div className='gr-6 gr-8-m'>
@@ -94,7 +94,7 @@ const Cashier = () => (
 
         <div className='gr-padding-10 table-body'>
             <h3 className='gr-padding-10'>
-                <span className='invisible normal_currency client_logged_out'>{it.L('Bank wire, credit card, e-wallet')}</span>
+                <span className='invisible normal_currency client_logged_out'>{it.L('Deposit into or withdraw from your real account')}</span>
                 <span className='invisible crypto_currency'>{it.L('Cryptocurrency')}</span>
             </h3>
             <div className='gr-row'>
@@ -105,7 +105,7 @@ const Cashier = () => (
                     img_src={it.url_for('images/pages/cashier/payment-methods.svg')}
                 />
                 <div className='gr-6 gr-8-m'>
-                    <span className='invisible normal_currency client_logged_out'>{it.L('Deposit or withdraw to your account via bank wire, credit card, or e-wallet.')}</span>
+                    <span className='invisible normal_currency client_logged_out'>{it.L('Move funds in and out of your real account.')}</span>
                     <span className='invisible crypto_currency'>{it.L('Manage the funds in your cryptocurrency account.')}</span>
                     &nbsp;
                     <a className='invisible normal_currency crypto_currency' href={`${it.url_for('cashier/payment_methods')}`} id='view_payment_methods'>

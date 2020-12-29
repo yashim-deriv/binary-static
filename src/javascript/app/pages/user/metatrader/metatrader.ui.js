@@ -638,7 +638,7 @@ const MetaTraderUI = (() => {
         const el_loading         = getElementById('demo_topup_loading');
         const acc_type           = Client.get('mt5_account');
         const is_demo            = accounts_info[acc_type].is_demo;
-        const topup_btn_text     = localize('Get [_1]', `10,000.00 ${MetaTraderConfig.getCurrency(acc_type)}`);
+        const topup_btn_text     = localize('Reset my virtual balance');
 
         el_loading.setVisibility(0);
         el_demo_topup_btn.firstChild.innerText = topup_btn_text;
