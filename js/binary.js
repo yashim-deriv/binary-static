@@ -34570,7 +34570,7 @@ var MetaTraderUI = function () {
         var el_loading = getElementById('demo_topup_loading');
         var acc_type = Client.get('mt5_account');
         var is_demo = accounts_info[acc_type].is_demo;
-        var topup_btn_text = localize('Reset my virtual balance');
+        var topup_btn_text = localize('Get [_1]', '10,000.00 ' + MetaTraderConfig.getCurrency(acc_type));
 
         el_loading.setVisibility(0);
         el_demo_topup_btn.firstChild.innerText = topup_btn_text;
