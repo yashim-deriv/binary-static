@@ -16034,11 +16034,14 @@ var Cashier = function () {
 
     var displayResetButton = function displayResetButton() {
         var el_virtual_topup_info = getElementById('virtual_topup_info');
-        if (!el_virtual_topup_info) return;
-        el_virtual_topup_info.className = 'toggle button';
+        var top_up_id = '#VRT_topup_link';
+        var $a = $(top_up_id);
+        if (!$a) return;
+        var new_el = { class: $a.attr('class', 'toggle'), html: $a.html(), id: $a.attr('id') };
+        new_el.href = Url.urlFor('/cashier/top_up_virtualws');
         el_virtual_topup_info.innerText = localize('Reset the balance of your virtual account to [_1] anytime.', [Client.get('currency') + ' 10,000.00']);
-        el_virtual_topup_info.href = Url.urlFor('/cashier/top_up_virtualws');
-        el_virtual_topup_info.parentNode.setVisibility(true);
+        $a.replaceWith($('<a/>', new_el));
+        $(top_up_id).parent().setVisibility(1);
     };
 
     var showCurrentCurrency = function showCurrentCurrency(currency, statement, mt5_logins) {
