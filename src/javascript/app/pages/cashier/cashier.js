@@ -10,8 +10,6 @@ const Url              = require('../../../_common/url');
 const getPropertyValue = require('../../../_common/utility').getPropertyValue;
 
 const Cashier = (() => {
-    let href = '';
-
     const showContent = () => {
         Client.activateByClientType();
         const anchor = Url.paramsHash().anchor;
