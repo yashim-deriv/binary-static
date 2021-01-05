@@ -66,7 +66,7 @@ const Cashier = (() => {
         const top_up_id = '#VRT_topup_link';
         const $a        = $(top_up_id);
         if (!$a) return;
-        const new_el    = { class: $a.attr('class', 'toggle button'), html: $a.html(), id: $a.attr('id') };
+        const new_el    = { class: 'toggle button', html: $a.html(), id: $a.attr('id') };
         href            = href || Url.urlFor('/cashier/top_up_virtualws');
         new_el.href     = href;
         el_virtual_topup_info.innerText = localize('Reset the balance of your virtual account to [_1] anytime.', [`${Client.get('currency')} 10,000.00`]);
