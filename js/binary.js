@@ -15927,8 +15927,6 @@ var Url = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_com
 var getPropertyValue = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getPropertyValue;
 
 var Cashier = function () {
-    var href = '';
-
     var showContent = function showContent() {
         Client.activateByClientType();
         var anchor = Url.paramsHash().anchor;
@@ -16034,26 +16032,15 @@ var Cashier = function () {
         }());
     };
 
-    var displayTopUpButton = function displayTopUpButton() {
-        BinarySocket.wait('balance').then(function (response) {
-            var el_virtual_topup_info = getElementById('virtual_topup_info');
-            var balance = +response.balance.balance;
-            var can_topup = balance <= 1000;
-            var top_up_id = '#VRT_topup_link';
-            var $a = $(top_up_id);
-            if (!$a) {
-                return;
-            }
-            var classes = ['toggle', 'button-disabled'];
-            var new_el = { class: $a.attr('class').replace(classes[+can_topup], classes[1 - +can_topup]), html: $a.html(), id: $a.attr('id') };
-            if (can_topup) {
-                href = href || Url.urlFor('/cashier/top_up_virtualws');
-                new_el.href = href;
-            }
-            el_virtual_topup_info.innerText = can_topup ? localize('Your virtual account balance is currently [_1] or less. You may top up your account with an additional [_2].', [Client.get('currency') + ' 1,000.00', Client.get('currency') + ' 10,000.00']) : localize('Reset the balance of your virtual account to [_1] anytime.', [Client.get('currency') + ' 10,000.00']);
-            $a.replaceWith($('<a/>', new_el));
-            $(top_up_id).parent().setVisibility(1);
-        });
+    var displayResetButton = function displayResetButton() {
+        var el_virtual_topup_info = getElementById('virtual_topup_info');
+        var top_up_id = '#VRT_topup_link';
+        var $a = $(top_up_id);
+        if (!$a) return;
+        $a.attr('class', 'toggle');
+        $a.attr.href = Url.urlFor('/cashier/top_up_virtualws');
+        el_virtual_topup_info.innerText = localize('Reset the balance of your virtual account to [_1] anytime.', [Client.get('currency') + ' 10,000.00']);
+        $(top_up_id).parent().setVisibility(1);
     };
 
     var showCurrentCurrency = function showCurrentCurrency(currency, statement, mt5_logins) {
@@ -16184,7 +16171,7 @@ var Cashier = function () {
                 var residence = Client.get('residence');
                 var currency = Client.get('currency');
                 if (Client.get('is_virtual')) {
-                    displayTopUpButton();
+                    displayResetButton();
                 } else if (currency) {
                     var is_p2p_allowed_currency = currency === 'USD';
                     var is_show_dp2p = /show_dp2p/.test(window.location.hash);
