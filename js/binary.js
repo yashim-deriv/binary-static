@@ -15927,6 +15927,8 @@ var Url = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_com
 var getPropertyValue = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getPropertyValue;
 
 var Cashier = function () {
+    var href = '';
+
     var showContent = function showContent() {
         Client.activateByClientType();
         var anchor = Url.paramsHash().anchor;
@@ -16038,7 +16040,8 @@ var Cashier = function () {
         var $a = $(top_up_id);
         if (!$a) return;
         var new_el = { class: $a.attr('class', 'toggle'), html: $a.html(), id: $a.attr('id') };
-        new_el.href = Url.urlFor('/cashier/top_up_virtualws');
+        href = href || Url.urlFor('/cashier/top_up_virtualws');
+        new_el.href = href;
         el_virtual_topup_info.innerText = localize('Reset the balance of your virtual account to [_1] anytime.', [Client.get('currency') + ' 10,000.00']);
         $a.replaceWith($('<a/>', new_el));
         $(top_up_id).parent().setVisibility(1);
