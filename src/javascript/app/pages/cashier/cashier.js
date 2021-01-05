@@ -10,6 +10,8 @@ const Url              = require('../../../_common/url');
 const getPropertyValue = require('../../../_common/utility').getPropertyValue;
 
 const Cashier = (() => {
+    let href = '';
+
     const showContent = () => {
         Client.activateByClientType();
         const anchor = Url.paramsHash().anchor;
@@ -65,7 +67,8 @@ const Cashier = (() => {
         const $a        = $(top_up_id);
         if (!$a) return;
         const new_el    = { class: $a.attr('class', 'toggle'), html: $a.html(), id: $a.attr('id') };
-        new_el.href =  Url.urlFor('/cashier/top_up_virtualws');
+        href            = href || Url.urlFor('/cashier/top_up_virtualws');
+        new_el.href     = href;
         el_virtual_topup_info.innerText = localize('Reset the balance of your virtual account to [_1] anytime.', [`${Client.get('currency')} 10,000.00`]);
         $a.replaceWith($('<a/>', new_el));
         $(top_up_id).parent().setVisibility(1);
