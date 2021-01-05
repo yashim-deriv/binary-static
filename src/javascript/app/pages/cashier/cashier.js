@@ -66,7 +66,7 @@ const Cashier = (() => {
         el_virtual_topup_info.innerText = localize('Reset the balance of your virtual account to [_1] anytime.', [`${Client.get('currency')} 10,000.00`]);
         el_virtual_topup_info.href = Url.urlFor('/cashier/top_up_virtualws');
         el_virtual_topup_info.parentNode.setVisibility(true);
-    }
+    };
 
     const showCurrentCurrency = (currency, statement, mt5_logins) => {
         const has_no_mt5          = mt5_logins.length === 0;
