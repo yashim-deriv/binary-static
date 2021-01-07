@@ -64,7 +64,7 @@
 /******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"vendors~dp2p":"vendors~dp2p","vendors~highstock":"vendors~highstock","vendors~webtrader-charts":"vendors~webtrader-charts"}[chunkId]||chunkId) + ".min.js"
+/******/ 		return __webpack_require__.p + "" + ({"vendors~dashboard":"vendors~dashboard","vendors~dp2p":"vendors~dp2p","vendors~highstock":"vendors~highstock","vendors~webtrader-charts":"vendors~webtrader-charts"}[chunkId]||chunkId) + ".min.js"
 /******/ 	}
 /******/
 /******/ 	// The require function
@@ -1346,52 +1346,66 @@ module.exports = GTM;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _require = __webpack_require__(/*! @livechat/customer-sdk */ "./node_modules/@livechat/customer-sdk/dist/customer-sdk.esm.js"),
+    init = _require.init;
+
 var BinarySocket = __webpack_require__(/*! ./socket_base */ "./src/javascript/_common/base/socket_base.js");
 var ClientBase = __webpack_require__(/*! ./client_base */ "./src/javascript/_common/base/client_base.js");
 
 var LiveChat = function () {
 
-    var initial_session_variables = { loginid: '', landing_company_shortcode: '', currency: '', residence: '', email: '' };
+    var licenseID = 12049137;
+    var clientID = '66aa088aad5a414484c1fd1fa8a5ace7';
+    var session_variables = { loginid: '', landing_company_shortcode: '', currency: '', residence: '', email: '' };
+    var client_email = void 0,
+        first_name = void 0,
+        last_name = void 0;
 
-    var init = function init() {
+    var setSessionVariables = function setSessionVariables() {
+        var loginid = ClientBase.get('loginid');
+        var landing_company_shortcode = ClientBase.get('landing_company_shortcode');
+        var currency = ClientBase.get('currency');
+        var residence = ClientBase.get('residence');
+        var email = ClientBase.get('email');
+
+        session_variables = _extends({}, loginid && { loginid: loginid }, landing_company_shortcode && { landing_company_shortcode: landing_company_shortcode }, currency && { currency: currency }, residence && { residence: residence }, email && { email: email });
+
+        window.LiveChatWidget.call('set_session_variables', session_variables);
+    };
+
+    var setNameEmail = function setNameEmail() {
+        if (client_email) window.LiveChatWidget.call('set_customer_email', client_email);
+        if (first_name && last_name) window.LiveChatWidget.call('set_customer_name', first_name + ' ' + last_name);
+    };
+
+    BinarySocket.wait('get_settings').then(function (response) {
+        var get_settings = response.get_settings || {};
+        first_name = get_settings.first_name;
+        last_name = get_settings.last_name;
+        client_email = ClientBase.get('email');
+
+        setSessionVariables();
+        setNameEmail();
+
+        window.LC_API.on_chat_ended = function () {
+            setNameEmail();
+        };
+    });
+
+    var initialize = function initialize() {
         if (window.LiveChatWidget) {
             window.LiveChatWidget.on('ready', function () {
-                window.LiveChatWidget.call('set_session_variables', initial_session_variables);
-
-                BinarySocket.wait('get_settings').then(function (response) {
-                    var get_settings = response.get_settings || {};
-                    var first_name = get_settings.first_name,
-                        last_name = get_settings.last_name;
-
-                    var email = ClientBase.get('email');
-
-                    if (email) window.LiveChatWidget.call('set_customer_email', email);
-                    if (first_name && last_name) window.LiveChatWidget.call('set_customer_name', first_name + ' ' + last_name);
-                });
-
-                window.LC_API.on_chat_ended = function () {
-                    if (!ClientBase.isLoggedIn()) {
+                window.LiveChatWidget.call('set_session_variables', session_variables);
+                if (!ClientBase.isLoggedIn()) {
+                    window.LC_API.on_chat_ended = function () {
                         window.LiveChatWidget.call('set_customer_email', ' ');
                         window.LiveChatWidget.call('set_customer_name', ' ');
-                    }
-                };
-
-                window.LiveChatWidget.on('visibility_changed', function (_ref) {
-                    var visibility = _ref.visibility;
-
-                    // only visible to CS
-                    if (visibility === 'maximized' && ClientBase.isLoggedIn()) {
-                        var loginid = ClientBase.get('loginid');
-                        var landing_company_shortcode = ClientBase.get('landing_company_shortcode');
-                        var currency = ClientBase.get('currency');
-                        var residence = ClientBase.get('residence');
-                        var email = ClientBase.get('email');
-
-                        var client_session_variables = _extends({}, loginid && { loginid: loginid }, landing_company_shortcode && { landing_company_shortcode: landing_company_shortcode }, currency && { currency: currency }, residence && { residence: residence }, email && { email: email });
-
-                        window.LiveChatWidget.call('set_session_variables', client_session_variables);
-                    }
-                });
+                    };
+                } else {
+                    window.LC_API.on_chat_ended = function () {
+                        setNameEmail();
+                    };
+                }
             });
         }
     };
@@ -1412,9 +1426,99 @@ var LiveChat = function () {
         }
     };
 
+    // Called when logging out to end ongoing chats if there is any
+    var endLiveChat = function endLiveChat() {
+        return new Promise(function (resolve) {
+            session_variables = { loginid: '', landing_company_shortcode: '', currency: '', residence: '', email: '' };
+            window.LiveChatWidget.call('set_session_variables', session_variables);
+            window.LiveChatWidget.call('set_customer_email', ' ');
+            window.LiveChatWidget.call('set_customer_name', ' ');
+
+            try {
+                var customerSDK = init({
+                    licenseId: licenseID,
+                    clientId: clientID
+                });
+                customerSDK.on('connected', function () {
+                    if (window.LiveChatWidget.get('chat_data')) {
+                        var _window$LiveChatWidge = window.LiveChatWidget.get('chat_data'),
+                            chatId = _window$LiveChatWidge.chatId,
+                            threadId = _window$LiveChatWidge.threadId;
+
+                        if (threadId) {
+                            customerSDK.deactivateChat({ chatId: chatId });
+                        }
+                    }
+                    resolve();
+                });
+            } catch (e) {
+                resolve();
+            }
+        });
+    };
+
+    // Delete existing LiveChat instance when there is no chat running
+    var livechatDeletion = function livechatDeletion() {
+        return new Promise(function (resolve) {
+            if (window.LiveChatWidget) {
+                window.LiveChatWidget.on('ready', function () {
+                    try {
+                        if (window.LiveChatWidget.get('customer_data').status !== 'chatting') {
+                            window.LiveChatWidget.call('destroy');
+                            resolve();
+                        }
+                    } catch (e) {
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
+            }
+        });
+    };
+
+    // LiveChat initialisation code (provided by LiveChat)
+    var liveChatInitialization = function liveChatInitialization() {
+        return new Promise(function (resolve) {
+            window.__lc = window.__lc || {}; // eslint-disable-line
+            window.__lc.license = licenseID; // eslint-disable-line
+            ;(function (n, t, c) {
+                function i(n) {
+                    return e._h ? e._h.apply(null, n) : e._q.push(n);
+                }var e = { _q: [], _h: null, _v: "2.0", on: function on() {
+                        i(["on", c.call(arguments)]);
+                    }, once: function once() {
+                        i(["once", c.call(arguments)]);
+                    }, off: function off() {
+                        i(["off", c.call(arguments)]);
+                    }, get: function get() {
+                        if (!e._h) throw new Error("[LiveChatWidget] You can't use getters before load.");return i(["get", c.call(arguments)]);
+                    }, call: function call() {
+                        i(["call", c.call(arguments)]);
+                    }, init: function init() {
+                        var n = t.createElement("script");n.async = !0, n.type = "text/javascript", n.src = "https://cdn.livechatinc.com/tracking.js", t.head.appendChild(n);
+                    } };!n.__lc.asyncInit && e.init(), n.LiveChatWidget = n.LiveChatWidget || e;
+            })(window, document, [].slice); //eslint-disable-line
+            resolve();
+        });
+    };
+
+    // Reroute group
+    var rerouteGroup = function rerouteGroup() {
+        LiveChat.livechatDeletion().then(function () {
+            LiveChat.liveChatInitialization().then(function () {
+                LiveChat.initialize();
+            });
+        });
+    };
+
     return {
-        init: init,
-        livechatFallback: livechatFallback
+        endLiveChat: endLiveChat,
+        initialize: initialize,
+        livechatDeletion: livechatDeletion,
+        livechatFallback: livechatFallback,
+        liveChatInitialization: liveChatInitialization,
+        rerouteGroup: rerouteGroup
     };
 }();
 
@@ -9811,39 +9915,8 @@ var BinaryLoader = function () {
             }
             active_script = null;
         }
-        if (window.LiveChatWidget) {
-            window.LiveChatWidget.on('ready', function () {
-                if (window.LiveChatWidget.get('customer_data').status !== 'chatting') {
-                    window.LiveChatWidget.call('destroy');
-                }
-            });
-        }
-        ScrollToAnchor.cleanup();
-    };
 
-    var liveChatInitialization = function liveChatInitialization() {
-        return new Promise(function (resolve) {
-            window.__lc = window.__lc || {}; // eslint-disable-line
-            window.__lc.license = 12049137; // eslint-disable-line
-            ;(function (n, t, c) {
-                function i(n) {
-                    return e._h ? e._h.apply(null, n) : e._q.push(n);
-                }var e = { _q: [], _h: null, _v: "2.0", on: function on() {
-                        i(["on", c.call(arguments)]);
-                    }, once: function once() {
-                        i(["once", c.call(arguments)]);
-                    }, off: function off() {
-                        i(["off", c.call(arguments)]);
-                    }, get: function get() {
-                        if (!e._h) throw new Error("[LiveChatWidget] You can't use getters before load.");return i(["get", c.call(arguments)]);
-                    }, call: function call() {
-                        i(["call", c.call(arguments)]);
-                    }, init: function init() {
-                        var n = t.createElement("script");n.async = !0, n.type = "text/javascript", n.src = "https://cdn.livechatinc.com/tracking.js", t.head.appendChild(n);
-                    } };!n.__lc.asyncInit && e.init(), n.LiveChatWidget = n.LiveChatWidget || e;
-            })(window, document, [].slice); //eslint-disable-line
-            resolve();
-        });
+        ScrollToAnchor.cleanup();
     };
 
     var afterContentChange = function afterContentChange(e) {
@@ -9860,13 +9933,10 @@ var BinaryLoader = function () {
         ContentVisibility.init().then(function () {
             BinarySocket.wait('authorize', 'website_status', 'landing_company').then(function () {
                 GTM.pushDataLayer({ event: 'page_load' }); // we need website_status.clients_country
-                if (!window.LiveChatWidget) {
-                    liveChatInitialization().then(function () {
-                        LiveChat.init();
-                    });
-                } else {
-                    LiveChat.init();
-                }
+
+                // reroute LiveChat group
+                LiveChat.rerouteGroup();
+
                 // first time load.
                 var last_image = $('#content img').last();
                 if (last_image) {
@@ -10033,6 +10103,7 @@ var LoggedInHandler = __webpack_require__(/*! ./logged_in */ "./src/javascript/a
 var Redirect = __webpack_require__(/*! ./redirect */ "./src/javascript/app/base/redirect.js");
 var AccountTransfer = __webpack_require__(/*! ../pages/cashier/account_transfer */ "./src/javascript/app/pages/cashier/account_transfer.js");
 var Cashier = __webpack_require__(/*! ../pages/cashier/cashier */ "./src/javascript/app/pages/cashier/cashier.js");
+var Dashboard = __webpack_require__(/*! ../pages/dashboard/dashboard */ "./src/javascript/app/pages/dashboard/dashboard.js");
 var DepositWithdraw = __webpack_require__(/*! ../pages/cashier/deposit_withdraw */ "./src/javascript/app/pages/cashier/deposit_withdraw.js");
 var DP2P = __webpack_require__(/*! ../pages/cashier/dp2p */ "./src/javascript/app/pages/cashier/dp2p.js");
 var PaymentAgentList = __webpack_require__(/*! ../pages/cashier/payment_agent_list */ "./src/javascript/app/pages/cashier/payment_agent_list.js");
@@ -10094,6 +10165,7 @@ var ResponsibleTrading = __webpack_require__(/*! ../../static/pages/responsible_
 
 /* eslint-disable max-len */
 var pages_config = {
+    'about-us': { module: Dashboard },
     account_transfer: { module: AccountTransfer, is_authenticated: true, only_real: true, needs_currency: true },
     accounts: { module: Accounts, is_authenticated: true, needs_currency: true },
     api_tokenws: { module: APIToken, is_authenticated: true },
@@ -10118,6 +10190,7 @@ var pages_config = {
     economic_calendar: { module: EconomicCalendar },
     endpoint: { module: Endpoint },
     epg_forwardws: { module: DepositWithdraw, is_authenticated: true, only_real: true },
+    explore: { module: Dashboard },
     faq: { module: StaticPages.AffiliatesFAQ },
     forex: { module: GetStarted.Forex },
     forwardws: { module: DepositWithdraw, is_authenticated: true, only_real: true },
@@ -10133,6 +10206,7 @@ var pages_config = {
     market_timesws: { module: TradingTimesUI, no_mf: true },
     metals: { module: GetStarted.Metals },
     metatrader: { module: MetaTrader, is_authenticated: true, needs_currency: true },
+    overview: { module: Dashboard },
     payment_agent_listws: { module: PaymentAgentList, is_authenticated: true },
     payment_methods: { module: Cashier.PaymentMethods },
     platforms: { module: Platforms },
@@ -10143,6 +10217,7 @@ var pages_config = {
     redirect: { module: Redirect },
     regulation: { module: Regulation },
     reset_passwordws: { module: ResetPassword, not_authenticated: true },
+    resources: { module: Dashboard },
     securityws: { module: Settings, is_authenticated: true },
     self_exclusionws: { module: SelfExclusion, is_authenticated: true, only_real: true },
     settingsws: { module: Settings, is_authenticated: true },
@@ -10448,15 +10523,13 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var _require = __webpack_require__(/*! @livechat/customer-sdk */ "./node_modules/@livechat/customer-sdk/dist/customer-sdk.esm.js"),
-    init = _require.init;
-
 var BinarySocket = __webpack_require__(/*! ./socket */ "./src/javascript/app/base/socket.js");
 var Defaults = __webpack_require__(/*! ../pages/trade/defaults */ "./src/javascript/app/pages/trade/defaults.js");
 var RealityCheckData = __webpack_require__(/*! ../pages/user/reality_check/reality_check.data */ "./src/javascript/app/pages/user/reality_check/reality_check.data.js");
 var ClientBase = __webpack_require__(/*! ../../_common/base/client_base */ "./src/javascript/_common/base/client_base.js");
 var GTM = __webpack_require__(/*! ../../_common/base/gtm */ "./src/javascript/_common/base/gtm.js");
 var SocketCache = __webpack_require__(/*! ../../_common/base/socket_cache */ "./src/javascript/_common/base/socket_cache.js");
+var LiveChat = __webpack_require__(/*! ../../_common/base/livechat */ "./src/javascript/_common/base/livechat.js");
 var getElementById = __webpack_require__(/*! ../../_common/common_functions */ "./src/javascript/_common/common_functions.js").getElementById;
 var removeCookies = __webpack_require__(/*! ../../_common/storage */ "./src/javascript/_common/storage.js").removeCookies;
 var urlFor = __webpack_require__(/*! ../../_common/url */ "./src/javascript/_common/url.js").urlFor;
@@ -10464,8 +10537,7 @@ var applyToAllElements = __webpack_require__(/*! ../../_common/utility */ "./src
 var getPropertyValue = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").getPropertyValue;
 
 var Client = function () {
-    var licenseID = 12049137;
-    var clientID = '66aa088aad5a414484c1fd1fa8a5ace7';
+
     var processNewAccount = function processNewAccount(options) {
         if (ClientBase.setNewAccount(options)) {
             setTimeout(function () {
@@ -10533,37 +10605,6 @@ var Client = function () {
         });
     };
 
-    var endLiveChat = function endLiveChat() {
-        return new Promise(function (resolve) {
-            var initial_session_variables = { loginid: '', landing_company_shortcode: '', currency: '', residence: '', email: '' };
-
-            window.LiveChatWidget.call('set_session_variables', initial_session_variables);
-            window.LiveChatWidget.call('set_customer_email', ' ');
-            window.LiveChatWidget.call('set_customer_name', ' ');
-
-            try {
-                var customerSDK = init({
-                    licenseId: licenseID,
-                    clientId: clientID
-                });
-                customerSDK.on('connected', function () {
-                    if (window.LiveChatWidget.get('chat_data')) {
-                        var _window$LiveChatWidge = window.LiveChatWidget.get('chat_data'),
-                            chatId = _window$LiveChatWidge.chatId,
-                            threadId = _window$LiveChatWidge.threadId;
-
-                        if (threadId) {
-                            customerSDK.deactivateChat({ chatId: chatId });
-                        }
-                    }
-                    resolve();
-                });
-            } catch (e) {
-                resolve();
-            }
-        });
-    };
-
     var doLogout = function doLogout(response) {
         if (response.logout !== 1) return;
         removeCookies('login', 'loginid', 'loginid_list', 'email', 'residence', 'settings'); // backward compatibility
@@ -10577,7 +10618,7 @@ var Client = function () {
         ClientBase.set('loginid', '');
         SocketCache.clear();
         RealityCheckData.clear();
-        endLiveChat().then(function () {
+        LiveChat.endLiveChat().then(function () {
             var redirect_to = getPropertyValue(response, ['echo_req', 'passthrough', 'redirect_to']);
             if (redirect_to) {
                 window.location.href = redirect_to;
@@ -16935,25 +16976,34 @@ var PaymentAgentWithdraw = function () {
                     switch (_context.prev = _context.next) {
                         case 0:
                             token = token || Url.getHashValue('token');
-                            _context.next = 3;
+
+                            if (token) {
+                                _context.next = 8;
+                                break;
+                            }
+
+                            _context.next = 4;
                             return BinarySocket.send({ verify_email: Client.get('email'), type: 'paymentagent_withdraw' });
 
-                        case 3:
+                        case 4:
                             ws_response = _context.sent;
 
 
                             if (ws_response.error) {
                                 showPageError(ws_response.error.message);
-                            } else if (!token) {
-                                if (isBinaryApp()) {
-                                    handleVerifyCode(function (verification_code) {
-                                        token = verification_code;
-                                        checkToken($ddl_agents);
-                                    });
-                                } else {
-                                    setActiveView(view_ids.notice);
-                                }
-                            } else if (!Validation.validEmailToken(token)) {
+                            } else if (isBinaryApp()) {
+                                handleVerifyCode(function (verification_code) {
+                                    token = verification_code;
+                                    checkToken($ddl_agents);
+                                });
+                            } else {
+                                setActiveView(view_ids.notice);
+                            }
+                            _context.next = 9;
+                            break;
+
+                        case 8:
+                            if (!Validation.validEmailToken(token)) {
                                 showPageError('token_error');
                             } else {
                                 insertListOption($ddl_agents, localize('Select payment agent'), '');
@@ -17052,7 +17102,7 @@ var PaymentAgentWithdraw = function () {
                                 });
                             }
 
-                        case 5:
+                        case 9:
                         case 'end':
                             return _context.stop();
                     }
@@ -17233,6 +17283,94 @@ var PaymentAgentWithdraw = function () {
 }();
 
 module.exports = PaymentAgentWithdraw;
+
+/***/ }),
+
+/***/ "./src/javascript/app/pages/dashboard/dashboard.js":
+/*!*********************************************************!*\
+  !*** ./src/javascript/app/pages/dashboard/dashboard.js ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var ReactDOM = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+var Client = __webpack_require__(/*! ../../base/client */ "./src/javascript/app/base/client.js");
+var BinarySocket = __webpack_require__(/*! ../../base/socket */ "./src/javascript/app/base/socket.js");
+var ServerTime = __webpack_require__(/*! ../../../_common/base/server_time */ "./src/javascript/_common/base/server_time.js");
+var getLanguage = __webpack_require__(/*! ../../../_common/language */ "./src/javascript/_common/language.js").get;
+var urlForStatic = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_common/url.js").urlForStatic;
+
+var Dashboard = function () {
+    var el_shadow_dom_dashboard = void 0;
+
+    var onLoad = function onLoad() {
+        return __webpack_require__.e(/*! require.ensure | dashboard */ "vendors~dashboard").then((function (require) {
+            return renderDashboard(__webpack_require__(/*! @deriv/dashboard */ "./node_modules/@deriv/dashboard/lib/index.js"));
+        }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
+    };
+
+    var onUnload = function onUnload() {
+        return ReactDOM.unmountComponentAtNode(el_shadow_dom_dashboard);
+    };
+
+    var renderDashboard = function renderDashboard(module) {
+        var el_loading = document.getElementById('loading_dashboard');
+        var el_dashboard_container = document.getElementById('binary_dashboard');
+
+        el_shadow_dom_dashboard = el_dashboard_container.attachShadow({ mode: 'open' });
+
+        var el_main_css = document.createElement('style');
+        // These are styles that are to be injected into the Shadow DOM, so they are in JS and not stylesheets
+        // They are to be applied to the `:host` selector
+        el_main_css.innerHTML = '@import url(' + urlForStatic('css/dashboard.min.css') + '); :host { --hem: 10px; }';
+        el_main_css.rel = 'stylesheet';
+
+        var language = getLanguage().toLowerCase();
+        var dashboard_props = {
+            client: {
+                is_logged_in: Client.get('currency'),
+                loginid: Client.get('residence')
+            },
+            config: {
+                asset_path: '/dashboard/assets',
+                has_router: false,
+                is_deriv_crypto: false,
+                routes: {
+                    home: '/' + language + '/dashboard/overview.html',
+                    about_us: '/' + language + '/dashboard/about-us.html',
+                    resources: '/' + language + '/dashboard/resources.html',
+                    explore: '/' + language + '/dashboard/explore.html'
+                }
+            },
+            ui: {
+                is_dark_mode_on: false,
+                language: language,
+                components: {
+                    LoginPrompt: null, // eslint-disable-line
+                    Page404: null // eslint-disable-line
+                }
+            },
+            server_time: ServerTime,
+            ws: BinarySocket
+        };
+
+        ReactDOM.render(React.createElement(module, dashboard_props), el_shadow_dom_dashboard);
+        el_shadow_dom_dashboard.prepend(el_main_css);
+        el_loading.parentNode.removeChild(el_loading);
+        el_shadow_dom_dashboard.host.classList.remove('invisible');
+    };
+
+    return {
+        onLoad: onLoad,
+        onUnload: onUnload
+    };
+}();
+
+module.exports = Dashboard;
 
 /***/ }),
 
