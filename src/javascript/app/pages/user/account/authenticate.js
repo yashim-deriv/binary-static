@@ -866,9 +866,17 @@ const Authenticate = (() => {
                                         country: country_code,
                                     } : false,
                                 },
+                                forceCrossDevice      : true,
+                                useLiveDocumentCapture: true,
                             },
                         },
-                        'face',
+                        {
+                            type   : 'face',
+                            options: {
+                                forceCrossDevice      : true,
+                                useLiveDocumentCapture: true,
+                            },
+                        },
                     ],
                 });
                 $('#authentication_loading').setVisibility(0);
