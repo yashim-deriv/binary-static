@@ -27664,9 +27664,6 @@ var Authenticate = function () {
                                 try {
                                     onfido = Onfido.init({
                                         containerId: 'onfido',
-                                        customUI: {
-                                            colorBackgroundButtonPrimaryHover: 'rgb(54 64 245)'
-                                        },
                                         language: {
                                             locale: getLanguage().toLowerCase() || 'en',
                                             phrases: onfido_phrases,
