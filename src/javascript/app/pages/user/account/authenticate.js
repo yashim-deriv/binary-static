@@ -845,10 +845,7 @@ const Authenticate = (() => {
             try {
                 onfido = Onfido.init({
                     containerId: 'onfido',
-                    customUI   : {
-                        colorBackgroundButtonPrimaryHover: 'rgb(54 64 245)',
-                    },
-                    language: {
+                    language   : {
                         locale       : getLanguage().toLowerCase() || 'en',
                         phrases      : onfido_phrases,
                         mobilePhrases: onfido_phrases,
