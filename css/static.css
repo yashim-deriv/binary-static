@@ -1640,7 +1640,7 @@ body #not_authenticated_financial ul.checked > li {
 .authentication #onfido .onfido-sdk-ui-NavigationBar-back {
   background: transparent; }
 
-.authentication #onfido .ods-button-button:hover {
+.authentication #onfido .ods-button:hover {
   background: #353ff4; }
 
 .authentication #onfido .onfido-sdk-ui-Button-button-outline:hover {
@@ -1655,7 +1655,7 @@ body #not_authenticated_financial ul.checked > li {
   outline: 0;
   border: none; }
 
-.authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.onfido-sdk-ui-Button-button-primary):hover, .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.onfido-sdk-ui-Button-button-primary):focus {
+.authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):hover, .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):focus {
   background-color: inherit; }
 
 .authentication .fields > .gr-row > div > .button {
