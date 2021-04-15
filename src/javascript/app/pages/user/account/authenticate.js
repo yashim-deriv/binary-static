@@ -21,7 +21,6 @@ const showLoadingImage        = require('../../../../_common/utility').showLoadi
     To handle onfido unsupported country, we handle the functions separately,
     the name of the functions will be original name + uns abbreviation of `unsupported`
 */
-
 const Authenticate = (() => {
     let is_any_upload_failed     = false;
     let is_any_upload_failed_uns = false;
@@ -885,6 +884,27 @@ const Authenticate = (() => {
                 $('#authentication_loading').setVisibility(0);
             }
         }
+        // This was added as a duct tape for onfido's hash links which refresh the page and terminates
+        // the current verification flow.
+        const mutationObserver = new MutationObserver((mutations) => {
+            mutations.forEach(() => {
+                const hash_links = $('a[href="#"]');
+                if (hash_links.length > 0) {
+                    for (let i = 0; i < hash_links.length; i++) {
+                        hash_links[i].href = '';
+                    }
+                }
+            });
+        });
+        const onfido_element = document.getElementById('onfido');
+        mutationObserver.observe(onfido_element, {
+            attributes           : true,
+            characterData        : true,
+            childList            : true,
+            subtree              : true,
+            attributeOldValue    : true,
+            characterDataOldValue: true,
+        });
     };
 
     const showCTAButton = (type, status) => {
