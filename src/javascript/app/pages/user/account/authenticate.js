@@ -884,7 +884,7 @@ const Authenticate = (() => {
                 $('#authentication_loading').setVisibility(0);
             }
         }
-        // This was added as a duct tape for onfido's hash links which refresh the page and terminates
+        // This was added as a fix for onfido's default hash links which refresh the page and terminates
         // the current verification flow.
         const mutationObserver = new MutationObserver((mutations) => {
             mutations.forEach(() => {
