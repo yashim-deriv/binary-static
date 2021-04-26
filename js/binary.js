@@ -27664,7 +27664,6 @@ var Authenticate = function () {
 
     var initOnfido = function () {
         var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(sdk_token, documents_supported, country_code) {
-            var mutationObserver, onfido_element;
             return regeneratorRuntime.wrap(function _callee$(_context) {
                 while (1) {
                     switch (_context.prev = _context.next) {
@@ -27722,29 +27721,28 @@ var Authenticate = function () {
                                 }
                             }
                             // This was added as a fix for onfido's default hash links which refresh the page and terminates
-                            // the current verification flow.
-                            mutationObserver = new MutationObserver(function (mutations) {
-                                mutations.forEach(function () {
-                                    var hash_links = $('a[href="#"]');
-                                    if (hash_links.length > 0) {
-                                        for (var i = 0; i < hash_links.length; i++) {
-                                            hash_links[i].href = '';
-                                        }
-                                    }
-                                });
-                            });
-                            onfido_element = document.getElementById('onfido');
+                            // the current verification flow. Disabled for now. Needed for 6.7.1 upwards
+                            // const mutationObserver = new MutationObserver((mutations) => {
+                            //     mutations.forEach(() => {
+                            //         const hash_links = $('a[href="#"]');
+                            //         if (hash_links.length > 0) {
+                            //             for (let i = 0; i < hash_links.length; i++) {
+                            //                 hash_links[i].href = '';
+                            //             }
+                            //         }
+                            //     });
+                            // });
+                            // const onfido_element = document.getElementById('onfido');
+                            // mutationObserver.observe(onfido_element, {
+                            //     attributes           : true,
+                            //     characterData        : true,
+                            //     childList            : true,
+                            //     subtree              : true,
+                            //     attributeOldValue    : true,
+                            //     characterDataOldValue: true,
+                            // });
 
-                            mutationObserver.observe(onfido_element, {
-                                attributes: true,
-                                characterData: true,
-                                childList: true,
-                                subtree: true,
-                                attributeOldValue: true,
-                                characterDataOldValue: true
-                            });
-
-                        case 4:
+                        case 1:
                         case 'end':
                             return _context.stop();
                     }
