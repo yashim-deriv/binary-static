@@ -27778,14 +27778,16 @@ var Authenticate = function () {
     });
 
     var onfido_element = document.getElementById('onfido');
-    mutationObserver.observe(onfido_element, {
-        attributes: true,
-        characterData: true,
-        childList: true,
-        subtree: true,
-        attributeOldValue: true,
-        characterDataOldValue: true
-    });
+    if (onfido_element) {
+        mutationObserver.observe(onfido_element, {
+            attributes: true,
+            characterData: true,
+            childList: true,
+            subtree: true,
+            attributeOldValue: true,
+            characterDataOldValue: true
+        });
+    }
 
     var showCTAButton = function showCTAButton(type, status) {
         var _authentication_objec = authentication_object,
