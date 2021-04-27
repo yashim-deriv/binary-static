@@ -900,16 +900,18 @@ const Authenticate = (() => {
             }
         });
     });
-    
+
     const onfido_element = document.getElementById('onfido');
-    mutationObserver.observe(onfido_element, {
-        attributes           : true,
-        characterData        : true,
-        childList            : true,
-        subtree              : true,
-        attributeOldValue    : true,
-        characterDataOldValue: true,
-    });
+    if (onfido_element) {
+        mutationObserver.observe(onfido_element, {
+            attributes           : true,
+            characterData        : true,
+            childList            : true,
+            subtree              : true,
+            attributeOldValue    : true,
+            characterDataOldValue: true,
+        });
+    }
 
     const showCTAButton = (type, status) => {
         const { needs_verification } = authentication_object;
