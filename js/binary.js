@@ -38576,7 +38576,7 @@ var isProduction = function isProduction() {
     return new RegExp('^(' + all_domains.join('|') + ')$', 'i').test(window.location.hostname);
 };
 
-var binary_desktop_app_id = 14473;
+var binary_desktop_app_id = 26470;
 
 var getAppId = function getAppId() {
     var app_id = null;
