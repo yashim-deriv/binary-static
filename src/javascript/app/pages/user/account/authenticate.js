@@ -887,6 +887,32 @@ const Authenticate = (() => {
         }
     };
 
+    // This was added as a fix for onfido's default hash links which refresh the page and terminates
+    // the current verification flow. Disabled for now. Needed for 6.7.1 upwards
+    const mutationObserver = new MutationObserver((mutations) => {
+        mutations.forEach(() => {
+            const hash_links = $('a[href="#"]');
+            if (hash_links.length > 0) {
+                for (let i = 0; i < hash_links.length; i++) {
+                    hash_links[i].removeAttribute('href');
+                    hash_links[i].addEventListener('click', (e) => e.preventDefault());
+                }
+            }
+        });
+    });
+
+    const onfido_element = document.getElementById('onfido');
+    if (onfido_element) {
+        mutationObserver.observe(onfido_element, {
+            attributes           : true,
+            characterData        : true,
+            childList            : true,
+            subtree              : true,
+            attributeOldValue    : true,
+            characterDataOldValue: true,
+        });
+    }
+
     const showCTAButton = (type, status) => {
         const { needs_verification } = authentication_object;
         const type_required = type === 'identity' ? 'poi' : 'poa';
