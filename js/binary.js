@@ -27761,6 +27761,32 @@ var Authenticate = function () {
         };
     }();
 
+    // This was added as a fix for onfido's default hash links which refresh the page and terminates
+    // the current verification flow. Disabled for now. Needed for 6.7.1 upwards
+    var mutationObserver = new MutationObserver(function (mutations) {
+        mutations.forEach(function () {
+            var hash_links = $('a[href="#"]');
+            if (hash_links.length > 0) {
+                for (var i = 0; i < hash_links.length; i++) {
+                    hash_links[i].removeAttribute('href');
+                    hash_links[i].addEventListener('click', function (e) {
+                        return e.preventDefault();
+                    });
+                }
+            }
+        });
+    });
+
+    var onfido_element = document.getElementById('onfido');
+    mutationObserver.observe(onfido_element, {
+        attributes: true,
+        characterData: true,
+        childList: true,
+        subtree: true,
+        attributeOldValue: true,
+        characterDataOldValue: true
+    });
+
     var showCTAButton = function showCTAButton(type, status) {
         var _authentication_objec = authentication_object,
             needs_verification = _authentication_objec.needs_verification;
