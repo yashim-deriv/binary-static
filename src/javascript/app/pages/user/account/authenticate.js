@@ -866,14 +866,12 @@ const Authenticate = (() => {
                                         country: country_code,
                                     } : false,
                                 },
-                                forceCrossDevice      : true,
                                 useLiveDocumentCapture: true,
                             },
                         },
                         {
                             type   : 'face',
                             options: {
-                                forceCrossDevice      : true,
                                 useLiveDocumentCapture: true,
                             },
                         },
