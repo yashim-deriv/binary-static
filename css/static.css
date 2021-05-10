@@ -1640,6 +1640,15 @@ body #not_authenticated_financial ul.checked > li {
 .authentication #onfido .onfido-sdk-ui-NavigationBar-back {
   background: transparent; }
 
+.authentication #onfido .onfido-sdk-ui-crossDevice-CrossDeviceLink-numberInputSection .ods-button.-action--primary {
+  height: 100%;
+  font-size: 0.875em; }
+
+.authentication #onfido .onfido-sdk-ui-crossDevice-CrossDeviceLink-viewOptionsGroup .onfido-sdk-ui-Theme-link {
+  background-color: inherit;
+  border-bottom-color: #353ff4;
+  color: #2b2d33; }
+
 .authentication #onfido .ods-button.onfido-sdk-ui-Uploader-crossDeviceButton {
   background-color: inherit;
   border: 1px solid transparent;
