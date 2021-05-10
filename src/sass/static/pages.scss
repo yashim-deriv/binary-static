@@ -963,7 +963,7 @@ body #not_authenticated_financial ul.checked > li {
             background-color: inherit;
             border: 1px solid transparent;
             border-radius: unset;
-            border-bottom-color: #353ff4;
+            border-bottom-color: rgb(53, 63, 244);
             color: rgb(43, 45, 51);
             outline: none;
             font-size: 0.875em;
@@ -971,7 +971,7 @@ body #not_authenticated_financial ul.checked > li {
 
             &:hover {
                 color: rgb(247, 249, 250);
-                background-color: #5c6cff;
+                background-color: rgb(92, 108, 255);
             }
         }
         .onfido-sdk-ui-Theme-link {
