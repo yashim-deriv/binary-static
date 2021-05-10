@@ -1644,34 +1644,6 @@ body #not_authenticated_financial ul.checked > li {
   height: 100%;
   font-size: 0.875em; }
 
-.authentication #onfido .onfido-sdk-ui-crossDevice-CrossDeviceLink-viewOptionsGroup .onfido-sdk-ui-Theme-link {
-  background-color: inherit;
-  border-bottom-color: #353ff4;
-  color: #2b2d33; }
-
-.authentication #onfido .ods-button.onfido-sdk-ui-Uploader-crossDeviceButton {
-  background-color: inherit;
-  border: 1px solid transparent;
-  border-radius: unset;
-  border-bottom-color: #353ff4;
-  color: #2b2d33;
-  outline: none;
-  font-size: 0.875em;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content; }
-  .authentication #onfido .ods-button.onfido-sdk-ui-Uploader-crossDeviceButton:hover {
-    color: #f7f9fa;
-    background-color: #5c6cff; }
-
-.authentication #onfido .onfido-sdk-ui-Theme-link {
-  background-color: #3640f5;
-  color: #f7f9fa;
-  padding: 11px 23px;
-  line-height: 15px;
-  border-radius: 2px;
-  font-size: 0.875em; }
-
 .authentication #onfido .onfido-sdk-ui-Button-button-outline:hover {
   background-color: transparent; }
 
