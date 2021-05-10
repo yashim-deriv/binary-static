@@ -1650,8 +1650,7 @@ body #not_authenticated_financial ul.checked > li {
   font-size: 0.875em;
   width: -webkit-fit-content;
   width: -moz-fit-content;
-  width: fit-content;
-  padding: unset; }
+  width: fit-content; }
   .authentication #onfido .ods-button.onfido-sdk-ui-Uploader-crossDeviceButton:hover {
     color: #f7f9fa;
     background-color: #5c6cff; }
