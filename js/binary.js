@@ -26758,7 +26758,7 @@ var TradePage = function () {
     };
 
     var init = function init() {
-        if (Client.isAccountOfType('financial')) {
+        if (Client.isAccountOfType('financial') || Client.isOptionsBlocked()) {
             return;
         }
 
@@ -27277,29 +27277,41 @@ var Authenticate = function () {
         processFilesUns(files);
     };
 
+    var cancelUpload = function cancelUpload() {
+        removeButtonLoading();
+        enableDisableSubmit();
+    };
+
     var processFiles = function processFiles(files) {
         var uploader = new DocumentUploader({ connection: BinarySocket.get() }); // send 'debug: true' here for debugging
         var idx_to_upload = 0;
-        var is_any_file_error = false;
+        var has_file_error = false;
 
-        compressImageFiles(files).then(function (files_to_process) {
-            readFiles(files_to_process).then(function (processed_files) {
-                processed_files.forEach(function (file) {
-                    if (file.message) {
-                        is_any_file_error = true;
-                        showError(file);
-                    }
-                });
+        readFiles(files).then(function (files_to_process) {
+            files_to_process.forEach(function (file) {
+                if (file.message) {
+                    has_file_error = true;
+                    showError(file);
+                }
+            });
+
+            if (has_file_error) {
+                cancelUpload();
+                return;
+            }
+
+            compressImageFiles(files_to_process).then(function (processed_files) {
                 var total_to_upload = processed_files.length;
-                if (is_any_file_error || !total_to_upload) {
-                    removeButtonLoading();
-                    enableDisableSubmit();
-                    return; // don't start submitting files until all front-end validation checks pass
+
+                if (!total_to_upload) {
+                    cancelUpload();
+                    return;
                 }
 
                 var isLastUpload = function isLastUpload() {
                     return total_to_upload === idx_to_upload + 1;
                 };
+
                 // sequentially send files
                 var uploadFile = function uploadFile() {
                     var $status = $submit_table.find('.' + processed_files[idx_to_upload].passthrough.class + ' .status');
@@ -27391,9 +27403,9 @@ var Authenticate = function () {
         var promises = [];
         files.forEach(function (f) {
             var promise = new Promise(function (resolve) {
-                if (isImageType(f.file.name)) {
-                    var $status = $submit_table.find('.' + f.class + ' .status');
-                    var $filename = $submit_table.find('.' + f.class + ' .filename');
+                if (isImageType(f.filename)) {
+                    var $status = $submit_table.find('.' + f.passthrough.class + ' .status');
+                    var $filename = $submit_table.find('.' + f.passthrough.class + ' .filename');
                     $status.text(localize('Compressing Image') + '...');
 
                     ConvertToBase64(f.file).then(function (img) {
@@ -27453,6 +27465,7 @@ var Authenticate = function () {
 
                     var format = (f.file.type.split('/')[1] || (f.file.name.match(/\.([\w\d]+)$/) || [])[1] || '').toUpperCase();
                     var obj = {
+                        file: f.file,
                         filename: f.file.name,
                         buffer: fr.result,
                         documentType: f.type,
@@ -27795,34 +27808,6 @@ var Authenticate = function () {
             return _ref.apply(this, arguments);
         };
     }();
-
-    // This was added as a fix for onfido's default hash links which refresh the page and terminates
-    // the current verification flow. Disabled for now. Needed for 6.7.1 upwards
-    var mutationObserver = new MutationObserver(function (mutations) {
-        mutations.forEach(function () {
-            var hash_links = $('a[href="#"]');
-            if (hash_links.length > 0) {
-                for (var i = 0; i < hash_links.length; i++) {
-                    hash_links[i].removeAttribute('href');
-                    hash_links[i].addEventListener('click', function (e) {
-                        return e.preventDefault();
-                    });
-                }
-            }
-        });
-    });
-
-    var onfido_element = document.getElementById('onfido');
-    if (onfido_element) {
-        mutationObserver.observe(onfido_element, {
-            attributes: true,
-            characterData: true,
-            childList: true,
-            subtree: true,
-            attributeOldValue: true,
-            characterDataOldValue: true
-        });
-    }
 
     var showCTAButton = function showCTAButton(type, status) {
         var _authentication_objec = authentication_object,
@@ -35502,11 +35487,6 @@ var MetaTraderUI = function () {
                 displayStep(1);
             }
 
-            // disable next button in case if all servers are used or unavailable
-            if (num_servers.supported === num_servers.used + num_servers.disabled) {
-                disableButtonLink('.btn-next');
-            }
-
             var sample_account = MetaTraderConfig.getSampleAccount(new_account_type);
             _$form.find('#view_2 #mt5_account_type').text(sample_account.title);
             _$form.find('button[type="submit"]').attr('acc_type', MetaTraderConfig.getCleanAccType(newAccountGetType(), 2));
@@ -35674,6 +35654,13 @@ var MetaTraderUI = function () {
                 _$form.find('#view_1 .btn-next')[error_msg ? 'addClass' : 'removeClass']('button-disabled');
                 _$form.find('#view_1 .btn-cancel').removeClass('invisible');
             });
+        }
+
+        // disable next button and Synthetic option if all servers are used or unavailable
+        var num_servers = populateTradingServers();
+        if (num_servers.supported === num_servers.used + num_servers.disabled) {
+            disableButtonLink('.btn-next');
+            _$form.find('.step-2 #rbtn_gaming_financial').addClass('existed disabled');
         }
     };
 
