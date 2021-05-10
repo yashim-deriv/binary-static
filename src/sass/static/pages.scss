@@ -968,6 +968,7 @@ body #not_authenticated_financial ul.checked > li {
             outline: none;
             font-size: 0.875em;
             width: fit-content;
+            padding: unset;
 
             &:hover {
                 color: rgb(247, 249, 250);
