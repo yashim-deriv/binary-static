@@ -1659,8 +1659,10 @@ body #not_authenticated_financial ul.checked > li {
   outline: 0;
   border: none; }
 
-.authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):hover, .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):focus {
-  background-color: inherit; }
+.authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button) {
+  background: transparent; }
+  .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):hover, .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):focus {
+    background-color: #3640f5; }
 
 .authentication .fields > .gr-row > div > .button {
   display: block;
