@@ -1656,7 +1656,7 @@ body #not_authenticated_financial ul.checked > li {
   color: #000; }
 
 .authentication #onfido .onfido-sdk-ui-CustomFileInput-container button {
-  background: inherit; }
+  background: #5c6cff; }
 
 .authentication #onfido input:hover, .authentication #onfido input:focus, .authentication #onfido textarea:hover, .authentication #onfido textarea:focus {
   outline: 0;
