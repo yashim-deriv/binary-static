@@ -978,7 +978,9 @@ body #not_authenticated_financial ul.checked > li {
         }
         .onfido-sdk-ui-CustomFileInput-container {
             button {
-                background: rgb(92, 108, 255);
+                &:hover {
+                    background: rgb(92, 108, 255);
+                }
             }
         }
         input, textarea {
