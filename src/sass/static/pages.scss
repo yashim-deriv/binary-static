@@ -988,8 +988,6 @@ body #not_authenticated_financial ul.checked > li {
             }
         }
         button:not(.onfido-sdk-ui-Theme-link):not(.ods-button) {
-            background: transparent !important;
-
             &:hover, &:focus {
                 background-color: inherit;
             }
