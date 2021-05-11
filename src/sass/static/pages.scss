@@ -984,7 +984,7 @@ body #not_authenticated_financial ul.checked > li {
         }
         button:not(.onfido-sdk-ui-Theme-link):not(.ods-button) {
             background: transparent;
-            
+
             &:hover, &:focus {
                 background-color: rgb(54, 64, 245);
             }
