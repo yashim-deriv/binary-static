@@ -1660,9 +1660,9 @@ body #not_authenticated_financial ul.checked > li {
   border: none; }
 
 .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button) {
-  background: transparent; }
+  background: transparent !important; }
   .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):hover, .authentication #onfido button:not(.onfido-sdk-ui-Theme-link):not(.ods-button):focus {
-    background-color: #3640f5; }
+    background-color: inherit; }
 
 .authentication .fields > .gr-row > div > .button {
   display: block;
