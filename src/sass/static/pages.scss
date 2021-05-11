@@ -976,6 +976,11 @@ body #not_authenticated_financial ul.checked > li {
         .onfido-sdk-ui-Theme-textButton:hover {
             color: $COLOR_BLACK;
         }
+        .onfido-sdk-ui-CustomFileInput-container {
+            button {
+                background: inherit;
+            }
+        }
         input, textarea {
             &:hover, &:focus {
                 outline: 0;
