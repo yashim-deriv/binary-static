@@ -1655,6 +1655,9 @@ body #not_authenticated_financial ul.checked > li {
 .authentication #onfido .onfido-sdk-ui-Theme-textButton:hover {
   color: #000; }
 
+.authentication #onfido .onfido-sdk-ui-CustomFileInput-container button {
+  background: inherit; }
+
 .authentication #onfido input:hover, .authentication #onfido input:focus, .authentication #onfido textarea:hover, .authentication #onfido textarea:focus {
   outline: 0;
   border: none; }
