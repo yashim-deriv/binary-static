@@ -970,6 +970,22 @@ body #not_authenticated_financial ul.checked > li {
             color: $COLOR_BLACK;
             border-radius: 0;
         }
+        /** TODO: To re-implement style overrides when upgrading Onfido version
+        .onfido-sdk-ui-Theme-textButton:hover {
+            color: $COLOR_BLACK;
+        }
+        .onfido-sdk-ui-CustomFileInput-container {
+            .onfido-sdk-ui-Theme-button-lg {
+                background: rgb(54, 64, 245);
+            }
+            button {
+                background: transparent;
+
+                &:hover {
+                    background: rgb(92, 108, 255);
+                }
+            }
+        } **/
         input, textarea {
             &:hover, &:focus {
                 outline: 0;
