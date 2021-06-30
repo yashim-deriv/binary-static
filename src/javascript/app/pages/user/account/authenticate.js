@@ -845,7 +845,7 @@ const Authenticate = (() => {
         TabSelector.onLoad();
     };
 
-    const getAuthenticationStatus = () => new Promise((resolve) => {
+    const getAccountStatus = () => new Promise((resolve) => {
         // check update account status
         BinarySocket.wait('get_account_status').then(() => {
             const authentication_response = State.getResponse('get_account_status.authentication');
@@ -980,52 +980,126 @@ const Authenticate = (() => {
 
     const initAuthentication = async () => {
         let has_personal_details_error = false;
-        const authentication_status = await getAuthenticationStatus();
+        const account_status = await getAccountStatus();
 
-        if (!authentication_status || authentication_status.error) {
+        if (!account_status || account_status.error) {
             $('#authentication_tab').setVisibility(0);
             $('#error_occured').setVisibility(1);
             return;
         }
 
-        const service_token_response = await getOnfidoServiceToken();
+        const { document, identity, needs_verification } = account_status;
+        const identity_status = identity.status;
+        const identity_last_attempt = identity.attempts.latest;
+        
+        const needs_poa = needs_verification.length && needs_verification.includes('document');
+        const needs_poi = needs_verification.length && needs_verification.includes('identity');
 
-        if (
-            service_token_response.error &&
-            service_token_response.error.code === 'MissingPersonalDetails'
-        ) {
-            has_personal_details_error = true;
-            const personal_fields_errors = {
-                address_city    : localize('Town/City'),
-                address_line_1  : localize('First line of home address'),
-                address_postcode: localize('Postal Code/ZIP'),
-                address_state   : localize('State/Province'),
-                email           : localize('Email address'),
-                phone           : localize('Telephone'),
-                place_of_birth  : localize('Place of birth'),
-                residence       : localize('Country of Residence'),
-            };
+        // Country Selector
+        if (identity_status === 'none' || has_require_submission) {
 
-            const missing_personal_fields = Object.keys(service_token_response.error.details)
-                .map(field => (personal_fields_errors[field].toLowerCase() || field));
+        } else {
+            switch (identity_last_attempt.service) {
+                case 'idv': {
+                    const { idv } = identity.services;
+                    const { status, submissions_left } = idv;
 
-            const error_msgs = missing_personal_fields ? missing_personal_fields.join(', ') : '';
+                    switch (status) {
+                        case 'pending': {
+                            // TODO: IDV Upload Complete Page
+                            $('#idv_upload_complete').setVisibility(1);
+                        }
+                        break;
+                        case 'rejected': {
+                            if (Number(submissions_left === 0)) {
+                                // TODO: IDV Rejected No Submissions Left
+                                $('#idv_limited').setVisibility(1);
+                                // TODO: Handle [Upload Identity Document] Buton
+                            } else {
+                                // TODO: IDV Rejected
+                                $('#idv_rejected').setVisibility(1);
+                                // TODO: Handle [Try Again] Button
+                            }
+                        }
+                        break;
+                        case 'verified': {
+                            // TODO: IDV Verified
+                            $('#idv_verified').setVisibility(1);
+                            if (needs_poa) {
+                                // Handle [Submit Proof of Address] Button
+                            }
+                        }
+                        break;
+                        case 'expired': {
+                            $('#idv_expired').setVisibility(1);
+                        }
+                        break;
+                    }
 
-            $('#missing_personal_fields').html(error_msgs);
+                }
+                case 'onfido': {
+                    const service_token_response = await getOnfidoServiceToken();
+
+                    if (
+                        service_token_response.error &&
+                        service_token_response.error.code === 'MissingPersonalDetails'
+                    ) {
+                        has_personal_details_error = true;
+                        const personal_fields_errors = {
+                            address_city    : localize('Town/City'),
+                            address_line_1  : localize('First line of home address'),
+                            address_postcode: localize('Postal Code/ZIP'),
+                            address_state   : localize('State/Province'),
+                            email           : localize('Email address'),
+                            phone           : localize('Telephone'),
+                            place_of_birth  : localize('Place of birth'),
+                            residence       : localize('Country of Residence'),
+                        };
+            
+                        const missing_personal_fields = Object.keys(service_token_response.error.details)
+                            .map(field => (personal_fields_errors[field].toLowerCase() || field));
+            
+                        const error_msgs = missing_personal_fields ? missing_personal_fields.join(', ') : '';
+            
+                        $('#missing_personal_fields').html(error_msgs);
+                    }
+                    
+                    const { onfido } = identity.services;
+                     const {
+                       status,
+                       submissions_left,
+                       last_rejected: rejected_reasons,
+                     } = onfido;
+
+                     switch (status) {
+                         case 'pending': {
+
+                         }
+                         case 'rejected': {
+                             if (Number(submissions_left) < 1) {
+                                $('#limited_poi').setVisibility(1);
+                             } else {
+                                 
+                             }
+                         }
+                     }
+
+                }
+                case 'manual' : {
+                    const { manual } = identity.services;
+
+                }
+                default:
+                    break;
+            }
         }
 
-        const { identity, needs_verification, document } = authentication_status;
-        authentication_object = authentication_status;
 
-        const is_fully_authenticated = identity.status === 'verified' && document.status === 'verified';
-        const should_allow_resubmission = needs_verification.includes('identity') || needs_verification.includes('document');
-        onfido_unsupported = !identity.services.onfido.is_country_supported;
-        const documents_supported = identity.services.onfido.documents_supported;
-        const country_code = identity.services.onfido.country_code;
-        const has_submission_attempts = !!identity.services.onfido.submissions_left;
-        const is_rejected = identity.status === 'rejected' || identity.status === 'suspected';
-        const last_rejected_reasons = identity.services.onfido.last_rejected;
-        const has_rejected_reasons = !!last_rejected_reasons.length && is_rejected;
+        // Handle IDV
+
+        // Handle Onfido
+
+        // Handle Manual
 
         if (is_fully_authenticated && !should_allow_resubmission) {
             $('#authentication_tab').setVisibility(0);
@@ -1163,7 +1237,7 @@ const Authenticate = (() => {
 
     const onLoad = async () => {
         cleanElementVisibility();
-        const authentication_status = await getAuthenticationStatus();
+        const authentication_status = await getAccountStatus();
         const is_required = checkIsRequired(authentication_status);
         if (!isAuthenticationAllowed()) {
             $('#authentication_tab').setVisibility(0);
