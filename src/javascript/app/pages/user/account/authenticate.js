@@ -24,6 +24,7 @@ const showLoadingImage        = require('../../../../_common/utility').showLoadi
 const Authenticate = (() => {
     let is_any_upload_failed     = false;
     let is_any_upload_failed_uns = false;
+    let require_idv_submission = false;
     const onfido_unsupported       = false;
     let authentication_object    = {};
     let file_checks          = {};
@@ -1041,75 +1042,111 @@ const Authenticate = (() => {
 
             $('#missing_personal_fields').html(error_msgs);
         }
-        
-        const { onfido_service } = identity.services;
-        const {
-            status,
-            submissions_left,
-            last_rejected: rejected_reasons,
-        } = onfido_service;
 
-        switch (status) {
-            case 'pending':
-                break;
-            case 'suspected':
-            case 'rejected':
-                if (Number(submissions_left) < 1) {
-                    $('#limited_poi').setVisibility(1);
-                } else {
-                    const maximum_reasons = rejected_reasons.slice(0, 3);
-                    const has_minimum_reasons = rejected_reasons.length > 3;
-                    $('#last_rejection_poi').setVisibility(1);
+        if (has_personal_details_error) {
+            $('#personal_details_error').setVisibility(1);
+        } else {
+            const { onfido_service } = identity.services;
+            const {
+                status,
+                submissions_left,
+                last_rejected: rejected_reasons,
+            } = onfido_service;
 
-                    maximum_reasons.forEach(reason => {
-                        $('#last_rejection_list').append(`<li>${reason}</li>`);
-                    });
-
-                    $('#last_rejection_button').off('click').on('click', () => {
-                        $('#last_rejection_poi').setVisibility(0);
-                
-                        if (onfido_unsupported) {
-                            $('#not_authenticated_uns').setVisibility(1);
-                            initUnsupported();
-                        } else {
-                            initOnfido(service_token_response.token, documents_supported, country_code);
-                        }
-                    });
-                    if (has_minimum_reasons) {
-                        $('#last_rejection_more').setVisibility(1);
-                        $('#last_rejection_more').off('click').on('click', () => {
-                            $('#last_rejection_more').setVisibility(0);
-                            $('#last_rejection_less').setVisibility(1);
+            const {
+                identity: {
+                    services: {
+                        onfido: { documents_supported },
+                    },
+                },
+                value: country_code,
+            } = selected_country;
     
-                            $('#last_rejection_list').empty();
-    
-                            rejected_reasons.forEach(reason => {
-                                $('#last_rejection_list').append(`<li>${reason}</li>`);
-                            });
-                        });
-                        $('#last_rejection_less').off('click').on('click', () => {
-                            $('#last_rejection_less').setVisibility(0);
-                            $('#last_rejection_more').setVisibility(1);
-    
-                            $('#last_rejection_list').empty();
-    
-                            maximum_reasons.forEach(reason => {
-                                $('#last_rejection_list').append(`<li>${reason}</li>`);
-                            });
-                        });
+            switch (status) {
+                case 'none':
+                    $('#msg_personal_details').setVisibility(1);
+                    if (onfido_unsupported) {
+                        $('#not_authenticated_uns').setVisibility(1);
+                        initUnsupported();
+                    } else {
+                        initOnfido(service_token_response.token, documents_supported, country_code);
                     }
-                }
-                break;
-            case 'verified':
-                // if POI is verified and POA is not verified, redirect to POA tab
-                if (needs_poa) {
-                    Url.updateParamsWithoutReload({ authentication_tab: 'poa' }, true);
-                }
-                break;
-            default:
-                break;
-        } 
-    }
+                    break;
+                case 'pending':
+                    showCTAButton('document', 'pending');
+                    break;
+                case 'suspected':
+                    $('#unverified').setVisibility(1);
+                    break;
+                case 'rejected':
+                    if (Number(submissions_left) < 1) {
+                        $('#limited_poi').setVisibility(1);
+                    } else {
+                        const maximum_reasons = rejected_reasons.slice(0, 3);
+                        const has_minimum_reasons = rejected_reasons.length > 3;
+                        $('#last_rejection_poi').setVisibility(1);
+    
+                        maximum_reasons.forEach(reason => {
+                            $('#last_rejection_list').append(`<li>${reason}</li>`);
+                        });
+    
+                        $('#last_rejection_button').off('click').on('click', () => {
+                            $('#last_rejection_poi').setVisibility(0);
+                    
+                            if (onfido_unsupported) {
+                                $('#not_authenticated_uns').setVisibility(1);
+                                initUnsupported();
+                            } else {
+                                initOnfido(service_token_response.token, documents_supported, country_code);
+                            }
+                        });
+                        if (has_minimum_reasons) {
+                            $('#last_rejection_more').setVisibility(1);
+                            $('#last_rejection_more').off('click').on('click', () => {
+                                $('#last_rejection_more').setVisibility(0);
+                                $('#last_rejection_less').setVisibility(1);
+        
+                                $('#last_rejection_list').empty();
+        
+                                rejected_reasons.forEach(reason => {
+                                    $('#last_rejection_list').append(`<li>${reason}</li>`);
+                                });
+                            });
+                            $('#last_rejection_less').off('click').on('click', () => {
+                                $('#last_rejection_less').setVisibility(0);
+                                $('#last_rejection_more').setVisibility(1);
+        
+                                $('#last_rejection_list').empty();
+        
+                                maximum_reasons.forEach(reason => {
+                                    $('#last_rejection_list').append(`<li>${reason}</li>`);
+                                });
+                            });
+                        }
+                        $('#unverified').setVisibility(1);
+                    }
+                    break;
+                case 'verified':
+                    // if POI is verified and POA is not verified, redirect to POA tab
+                    if (needs_poa) {
+                        Url.updateParamsWithoutReload({ authentication_tab: 'poa' }, true);
+                    }
+                    showCTAButton('document', 'verified');
+                    $('#verified').setVisibility(1);
+                    break;
+                case 'expired':
+                    $('#expired_poi').setVisibility(1);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    const handleManual = () => {
+        $('#not_authenticated_uns').setVisibility(1);
+        initUnsupported();
+    };
 
     const initAuthentication = async () => {
         const account_status = await getAccountStatus();
@@ -1125,81 +1162,19 @@ const Authenticate = (() => {
         const identity_last_attempt = identity.attempts.latest;
         
         const needs_poa = needs_verification.length && needs_verification.includes('document');
-        const needs_poi = needs_verification.length && needs_verification.includes('identity');
+        // const needs_poi = needs_verification.length && needs_verification.includes('identity');
 
-        const require_submission = 
+        const is_fully_authenticated = identity.status === 'verified' && document.status === 'verified';
+        const should_allow_resubmission = needs_verification.includes('identity') || needs_verification.includes('document');
 
         // Country Selector
-        if (identity_status === 'none' || require_submission) {
+        if (identity_status === 'none' || require_idv_submission) {
             // TODO: Replace with mitchell's implementation
             // handleResidenceList();
-        } else {
-            switch (identity_last_attempt.service) {
-                case 'idv':
-                    handleIdv(identity, needs_poa);
-                    break;
-                case 'onfido':
-                    handleOnfido(identity, needs_poa);
-                    break;
-                case 'manual':
-                    const { manual } = identity.services;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        if (is_fully_authenticated && !should_allow_resubmission) {
+        } else if (is_fully_authenticated && !should_allow_resubmission) {
             $('#authentication_tab').setVisibility(0);
             $('#authentication_verified').setVisibility(1);
-        }
-        } else if (!needs_verification.includes('identity')) {
-            // if POI is verified and POA is not verified, redirect to POA tab
-            if (identity.status === 'verified' && document.status !== 'verified') {
-                Url.updateParamsWithoutReload({ authentication_tab: 'poa' }, true);
-            }
-            switch (identity.status) {
-                case 'none':
-                    $('#msg_personal_details').setVisibility(1);
-                    if (onfido_unsupported) {
-                        $('#not_authenticated_uns').setVisibility(1);
-                        initUnsupported();
-                    } else {
-                        initOnfido(service_token_response.token, documents_supported, country_code);
-                    }
-                    break;
-                case 'pending':
-                    showCTAButton('document', 'pending');
-
-                    $('#upload_complete').setVisibility(1);
-                    break;
-                case 'rejected':
-                    $('#unverified').setVisibility(1);
-                    break;
-                case 'verified':
-                    showCTAButton('document', 'verified');
-                    $('#verified').setVisibility(1);
-                    break;
-                case 'expired':
-                    $('#expired_poi').setVisibility(1);
-                    break;
-                case 'suspected':
-                    $('#unverified').setVisibility(1);
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            // eslint-disable-next-line no-lonely-if
-            if (onfido_unsupported) {
-                $('#not_authenticated_uns').setVisibility(1);
-                initUnsupported();
-            } else {
-                $('#msg_personal_details').setVisibility(1);
-                initOnfido(service_token_response.token, documents_supported, country_code);
-            }
-        }
-        if (!needs_verification.includes('document')) {
+        } else if (!needs_verification.includes('document')) {
             switch (document.status) {
                 case 'none': {
                     init();
@@ -1227,8 +1202,19 @@ const Authenticate = (() => {
                     break;
             }
         } else {
-            init();
-            $('#not_authenticated').setVisibility(1);
+            switch (identity_last_attempt.service) {
+                case 'idv':
+                    handleIdv(identity, needs_poa);
+                    break;
+                case 'onfido':
+                    handleOnfido(identity, needs_poa);
+                    break;
+                case 'manual':
+                    handleManual(identity);
+                    break;
+                default:
+                    break;
+            }
         }
 
         $('#authentication_loading').setVisibility(0);
