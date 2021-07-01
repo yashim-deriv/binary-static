@@ -12,6 +12,7 @@ const isImageType             = require('../../../../_common/image_utility').isI
 const getLanguage             = require('../../../../_common/language').get;
 const localize                = require('../../../../_common/localize').localize;
 const State                   = require('../../../../_common/storage').State;
+const makeOption              = require('../../../../_common/common_functions').makeOption;
 const toTitleCase             = require('../../../../_common/string_util').toTitleCase;
 const TabSelector             = require('../../../../_common/tab_selector');
 const Url                     = require('../../../../_common/url');
@@ -24,7 +25,6 @@ const showLoadingImage        = require('../../../../_common/utility').showLoadi
 const Authenticate = (() => {
     let is_any_upload_failed     = false;
     let is_any_upload_failed_uns = false;
-    let require_idv_submission = false;
     const onfido_unsupported       = false;
     let authentication_object    = {};
     let file_checks          = {};
@@ -980,6 +980,34 @@ const Authenticate = (() => {
         $('#limited_poi').setVisibility(0);
     };
 
+    const handleResidenceList = () => {
+        let residence_list;
+        BinarySocket.send({ residence_list: 1 }).then(response => residence_list = response.residence_list);
+        const $residence = $('#residence');
+        if (residence_list.length > 0) {
+            const $options_with_disabled = $('<select/>');
+            residence_list.forEach((res) => {
+                $options_with_disabled.append(makeOption({
+                    text       : res.text,
+                    value      : res.value,
+                    is_disabled: res.disabled,
+                }));
+            });
+            $residence.html($options_with_disabled.html());
+            const residence_dropdown = document.getElementById('residence');
+            if (residence_dropdown) {
+                residence_dropdown.addEventListener('change', (e) => {
+                    const dropdown_country = residence_list.filter(r => r.value === e.target.value);
+                    if (dropdown_country) {
+                        selected_country = dropdown_country;
+                    }
+                });
+            }
+        } else {
+            $residence.setVisibility(1);
+        }
+    };
+
     const handleIdv = (identity, needs_poa) => {
         const { idv } = identity.services;
         const { status, submissions_left } = idv;
@@ -1000,7 +1028,7 @@ const Authenticate = (() => {
                     // TODO: Handle [Try Again] Button
                 }
                 break;
-            case 'verified': 
+            case 'verified':
                 // TODO: IDV Verified
                 $('#idv_verified').setVisibility(1);
                 if (needs_poa) {
@@ -1105,7 +1133,6 @@ const Authenticate = (() => {
                             $('#last_rejection_more').off('click').on('click', () => {
                                 $('#last_rejection_more').setVisibility(0);
                                 $('#last_rejection_less').setVisibility(1);
-        
                                 $('#last_rejection_list').empty();
         
                                 rejected_reasons.forEach(reason => {
@@ -1115,7 +1142,6 @@ const Authenticate = (() => {
                             $('#last_rejection_less').off('click').on('click', () => {
                                 $('#last_rejection_less').setVisibility(0);
                                 $('#last_rejection_more').setVisibility(1);
-        
                                 $('#last_rejection_list').empty();
         
                                 maximum_reasons.forEach(reason => {
@@ -1168,9 +1194,8 @@ const Authenticate = (() => {
         const should_allow_resubmission = needs_verification.includes('identity') || needs_verification.includes('document');
 
         // Country Selector
-        if (identity_status === 'none' || require_idv_submission) {
-            // TODO: Replace with mitchell's implementation
-            // handleResidenceList();
+        if (identity_status === 'none') {
+            handleResidenceList();
         } else if (is_fully_authenticated && !should_allow_resubmission) {
             $('#authentication_tab').setVisibility(0);
             $('#authentication_verified').setVisibility(1);
