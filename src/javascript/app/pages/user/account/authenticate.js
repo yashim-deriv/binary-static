@@ -1003,8 +1003,48 @@ const Authenticate = (() => {
                     }
                 });
             }
+
+            const next_button = document.getElementById('button_next_country_selected');
+            if (next_button) {
+                next_button.addEventListener('click', () => {
+                    if (selected_country) {
+                        handleDocumentList(selected_country);
+                    }
+                });
+            }
         } else {
             $residence.setVisibility(1);
+        }
+    };
+
+    const handleDocumentList = (residence_list) => {
+        const $documents = $('#documents');
+        const $example = $('#example');
+        // to be changed with real selected item from country selection page
+        const selected_item_index = 159;
+        if (residence_list.length > 0) {
+            const $options_with_disabled = $('<select/>');
+            // to be changed with residence selected
+            const document_list = residence_list[selected_item_index].identity.services.idv.documents_supported;
+            Object.values(document_list).forEach((res) => {
+                const { display_name , format } = res;
+                $options_with_disabled.append(makeOption({
+                    text       : display_name,
+                    value      : format,
+                    is_disabled: false,
+                }));
+            });
+
+            $documents.html($options_with_disabled.html());
+
+            // This format maybe take from somewere else but logix ready
+            $documents.on('change', (e) => {
+                e.preventDefault();
+                if ($documents[0].selectedOptions){
+                    const format = $documents[0].selectedOptions[0].getAttribute('value');
+                    $example.html(`Example: ${format}`);
+                }
+            });
         }
     };
 
@@ -1018,7 +1058,7 @@ const Authenticate = (() => {
                 $('#idv_upload_complete').setVisibility(1);
                 break;
             case 'rejected':
-                if (Number(submissions_left === 0)) {
+                if (Number(submissions_left < 1)) {
                     // TODO: IDV Rejected No Submissions Left
                     $('#idv_limited').setVisibility(1);
                     // TODO: Handle [Upload Identity Document] Buton
